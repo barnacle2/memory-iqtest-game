@@ -108,15 +108,26 @@ export default function PatternGame() {
     const newPattern: number[] = [];
     const totalCells = gridSize * gridSize;
 
+    // Generate unique random numbers for the pattern
     while (newPattern.length < patternLength) {
-      const cell = Math.floor(Math.random() * totalCells);
-      if (!newPattern.includes(cell)) {
-        newPattern.push(cell);
-      }
+        const cell = Math.floor(Math.random() * totalCells);
+        if (!newPattern.includes(cell)) {
+            newPattern.push(cell);
+        }
     }
 
-    setPattern(newPattern);
-    showPatternToPlayer(newPattern);
+    // Ensure the pattern includes all numbers from 0 to patternLength - 1
+    for (let i = 0; i < patternLength; i++) {
+        if (!newPattern.includes(i)) {
+            newPattern[i] = i; // Fill in missing numbers
+        }
+    }
+
+    // Remove duplicates and sort the pattern
+    const uniquePattern = Array.from(new Set(newPattern)).sort((a, b) => a - b);
+    
+    setPattern(uniquePattern);
+    showPatternToPlayer(uniquePattern);
   };
 
   const showPatternToPlayer = (newPattern: number[]) => {
@@ -285,12 +296,15 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 10,
+    width: '100%',
+    maxWidth: 400,
   },
   cell: {
     width: 80,

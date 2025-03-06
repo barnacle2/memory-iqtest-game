@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Alert,
-  ScrollView
+  ScrollView,
+  Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SPACING, FONT_SIZES, SHADOWS } from '../../constants/theme';
@@ -18,6 +19,7 @@ interface Question {
   options: string[];
   correctAnswer: number;
   explanation: string;
+  patternImages?: string[];
 }
 
 const generateQuestions = (level: number): Question[] => {
@@ -147,6 +149,19 @@ const generateQuestions = (level: number): Question[] => {
       correctAnswer: 1,
       explanation: 'The bath will be filled in 3 minutes.',
     },
+    // Pattern questions
+    {
+      question: 'Which pattern comes next?',
+      patternImages: [
+        // You can use image URLs or a representation of the grid
+        'url_to_image_1',
+        'url_to_image_2',
+        'url_to_image_3',
+      ],
+      options: ['a', 'b', 'c', 'd'],
+      correctAnswer: 1, // Index of the correct option
+      explanation: 'The correct pattern follows the sequence of filled squares.',
+    },
     // Add more questions as needed...
   ];
 
@@ -164,8 +179,8 @@ export default function IQGame() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [timePerQuestion, setTimePerQuestion] = useState(30);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timePerQuestion, setTimePerQuestion] = useState(90);
+  const [timeLeft, setTimeLeft] = useState(90);
   const [highScore, setHighScore] = useState(0);
   const [totalCorrect, setTotalCorrect] = useState(0);
 
@@ -323,9 +338,17 @@ export default function IQGame() {
       </View>
 
       <Card variant="elevated" style={styles.questionCard}>
-        <Text style={styles.questionText}>
-          {currentQuestion.question}
-        </Text>
+        {currentQuestion.patternImages ? (
+          <View style={styles.patternContainer}>
+            {currentQuestion.patternImages.map((image, index) => (
+              <Image key={index} source={{ uri: image }} style={styles.patternImage} />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.questionText}>
+            {currentQuestion.question}
+          </Text>
+        )}
 
         {showExplanation ? (
           <View style={styles.explanationContainer}>
@@ -434,5 +457,14 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     color: COLORS.textLight,
     textAlign: 'center',
+  },
+  patternContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  patternImage: {
+    width: 50, // Adjust size as needed
+    height: 50,
   },
 }); 
