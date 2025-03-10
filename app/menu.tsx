@@ -136,8 +136,29 @@ const GameMenu = () => {
       const stats = await AsyncStorage.getItem('performanceStats');
       if (stats) {
         const parsedStats = JSON.parse(stats);
-        setCurrentIQ(parsedStats.currentIQ);
-        setDayStreak(parsedStats.dayStreak);
+        setCurrentIQ(parsedStats.currentIQ || 0);
+        setDayStreak(parsedStats.dayStreak || 0);
+
+        // Check the last played date
+        const lastPlayedDate = parsedStats.lastPlayedDate ? new Date(parsedStats.lastPlayedDate) : null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set time to midnight for comparison
+
+        if (lastPlayedDate) {
+          // If the last played date is not today, increment the streak
+          if (lastPlayedDate < today) {
+            const newStreak = parsedStats.dayStreak + 1;
+            setDayStreak(newStreak);
+            // Update the performance stats with the new streak and today's date
+            parsedStats.dayStreak = newStreak;
+            parsedStats.lastPlayedDate = today.toISOString(); // Save today's date
+            await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
+          }
+        } else {
+          // If there's no last played date, set it to today
+          parsedStats.lastPlayedDate = today.toISOString();
+          await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
+        }
       }
     } catch (error) {
       console.error('Error loading performance stats:', error);

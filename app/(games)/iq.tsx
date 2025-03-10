@@ -232,28 +232,38 @@ export default function IQGame() {
   const handleGameOver = async () => {
     const finalIQ = calculateIQ();
     await saveHighScore(score);
+  
+    try {
+        // Load existing performance stats
+        const stats = await AsyncStorage.getItem('performanceStats');
+        let parsedStats = stats ? JSON.parse(stats) : {};
+  
+        // Update the IQ challenge score and current IQ
+        parsedStats.iqChallenge = {
+            currentScore: score,
+            highScore: Math.max(score, parsedStats.iqChallenge?.highScore || 0),
+        };
+        parsedStats.currentIQ = finalIQ; // Save the current IQ
+
+        // Update the last played date
+        parsedStats.lastPlayedDate = new Date().toISOString(); // Save today's date
+
+        // Save back to AsyncStorage
+        await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
+    } catch (error) {
+        console.error('Error saving IQ game score:', error);
+    }
+  
     Alert.alert(
-      'Game Over!',
-      `Your final score: ${score}\nEstimated IQ: ${finalIQ}\nHigh score: ${Math.max(score, highScore)}`,
-      [
-        {
-          text: 'Try Again',
-          onPress: () => {
-            setLevel(1);
-            setScore(0);
-            setLives(3);
-            setTotalCorrect(0);
-            startNewLevel();
-          }
-        },
-        {
-          text: 'Exit to Menu',
-          onPress: () => router.back()
-        }
-      ]
+        'Game Over!',
+        `Your final score: ${score}\nEstimated IQ: ${finalIQ}\nHigh score: ${Math.max(score, highScore)}`,
+        [
+            { text: 'Try Again', onPress: () => resetGame() },
+            { text: 'Exit to Menu', onPress: () => router.back() }
+        ]
     );
   };
-
+  
   const startNewLevel = () => {
     const newQuestions = generateQuestions(level);
     setQuestions(newQuestions);
@@ -304,6 +314,15 @@ export default function IQGame() {
         startNewLevel();
       }
     }, 3000);
+  };
+
+  const resetGame = () => {
+    setScore(0);
+    setLevel(1);
+    setLives(3);
+    setCurrentQuestionIndex(0);
+    setTotalCorrect(0);
+    startNewLevel(); // Optionally restart the level
   };
 
   if (questions.length === 0) return null;

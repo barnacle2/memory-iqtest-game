@@ -59,6 +59,25 @@ export default function PatternGame() {
 
   const handleGameOver = async () => {
     await saveHighScore(score);
+
+    try {
+      const stats = await AsyncStorage.getItem('performanceStats');
+      let parsedStats = stats ? JSON.parse(stats) : {};
+
+      // Update the pattern recall score
+      parsedStats.patternRecall = {
+        currentScore: score,
+        highScore: Math.max(score, parsedStats.patternRecall?.highScore || 0),
+      };
+
+      // Update the last played date
+      parsedStats.lastPlayedDate = new Date().toISOString(); // Save today's date
+
+      await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
+    } catch (error) {
+      console.error('Error saving pattern recall score:', error);
+    }
+
     Alert.alert(
       'Game Over!',
       `Your final score: ${score}\nHigh score: ${Math.max(score, highScore)}`,

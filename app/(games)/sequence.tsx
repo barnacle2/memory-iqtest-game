@@ -135,6 +135,9 @@ export default function SequenceGame() {
         parsedStats.numberSequence.highScore = newScore;
     }
 
+    // Update the last played date
+    parsedStats.lastPlayedDate = new Date().toISOString(); // Save today's date
+
     // Save updated performance stats
     await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
   };

@@ -112,6 +112,25 @@ export default function MatchingGame() {
     setTimerActive(false);
     setGameWon(false);
     await saveHighScore(score);
+
+    try {
+        const stats = await AsyncStorage.getItem('performanceStats');
+        let parsedStats = stats ? JSON.parse(stats) : {};
+
+        // Update the matching game score
+        parsedStats.matchingGame = {
+            currentScore: score,
+            highScore: Math.max(score, parsedStats.matchingGame?.highScore || 0),
+        };
+
+        // Update the last played date
+        parsedStats.lastPlayedDate = new Date().toISOString(); // Save today's date
+
+        await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
+    } catch (error) {
+        console.error('Error saving matching game score:', error);
+    }
+
     Alert.alert(
       'Game Over!',
       `Your final score: ${score}\nHigh score: ${Math.max(score, highScore)}`,
