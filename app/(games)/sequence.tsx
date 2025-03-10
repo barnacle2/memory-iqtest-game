@@ -113,9 +113,30 @@ export default function SequenceGame() {
     if (newPlayerSequence.length === sequence.length) {
       const newScore = score + (level * 10);
       setScore(newScore);
+      handleGameCompletion(newScore);
       setLevel(level + 1);
       setTimeout(startNewSequence, 500);
     }
+  };
+
+  const handleGameCompletion = async (newScore: number) => {
+    // Load existing performance stats
+    const stats = await AsyncStorage.getItem('performanceStats');
+    const parsedStats = stats ? JSON.parse(stats) : {
+        patternRecall: { currentScore: 0, highScore: 0 },
+        matchingGame: { currentScore: 0, highScore: 0 },
+        numberSequence: { currentScore: 0, highScore: 0 },
+        iqChallenge: { currentScore: 0, highScore: 0 },
+    };
+
+    // Update the current score and high score for Number Sequence
+    parsedStats.numberSequence.currentScore = newScore;
+    if (newScore > parsedStats.numberSequence.highScore) {
+        parsedStats.numberSequence.highScore = newScore;
+    }
+
+    // Save updated performance stats
+    await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
   };
 
   return (

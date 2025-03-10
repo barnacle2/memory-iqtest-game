@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -8,13 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  Dimensions
+  Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Card } from '../components/Card';
 import { COLORS, FONT_SIZES, SPACING, SHADOWS, BORDER_RADIUS } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const gameCategories = [
   {
@@ -51,6 +51,18 @@ export default function Landing() {
   const [playerName, setPlayerName] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const checkPlayerName = async () => {
+      const savedName = await AsyncStorage.getItem('playerName');
+      if (savedName) {
+        // If a name is found, navigate to the menu
+        router.push('/menu');
+      }
+    };
+
+    checkPlayerName();
+  }, []);
 
   const handlePlay = async () => {
     if (!showNameInput) {

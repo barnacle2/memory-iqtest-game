@@ -112,7 +112,7 @@ export default function PatternGame() {
     while (newPattern.size < patternLength) {
         let randIndex = Math.floor(Math.random() * totalCells);
 
-        // Ensure we don’t generate an invalid index
+        // Ensure we don't generate an invalid index
         if (randIndex < 0 || randIndex >= totalCells) {
             console.error(`Invalid index generated: ${randIndex}`);
             continue;
@@ -188,6 +188,8 @@ const showPatternToPlayer = (newPattern: number[]) => {
         if (isPatternCorrect) {
             const newScore = score + (level * 10);
             setScore(newScore);
+            handleGameCompletion(newScore); // Call to save the score
+
             setLevel(prev => prev + 1);
             
             // Check if grid size should increase
@@ -209,6 +211,26 @@ const showPatternToPlayer = (newPattern: number[]) => {
             handleGameOver(); // Call game over if the pattern is incorrect
         }
     }
+  };
+
+  const handleGameCompletion = async (newScore: number) => {
+    // Load existing performance stats
+    const stats = await AsyncStorage.getItem('performanceStats');
+    const parsedStats = stats ? JSON.parse(stats) : {
+        patternRecall: { currentScore: 0, highScore: 0 },
+        matchingGame: { currentScore: 0, highScore: 0 },
+        numberSequence: { currentScore: 0, highScore: 0 },
+        iqChallenge: { currentScore: 0, highScore: 0 },
+    };
+
+    // Update the current score and high score for Pattern Recall
+    parsedStats.patternRecall.currentScore = newScore;
+    if (newScore > parsedStats.patternRecall.highScore) {
+        parsedStats.patternRecall.highScore = newScore;
+    }
+
+    // Save updated performance stats
+    await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
   };
 
   if (!isReady || gameState === 'initializing') {

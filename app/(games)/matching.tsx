@@ -194,6 +194,26 @@ export default function MatchingGame() {
     }
   };
 
+  const handleGameCompletion = async (newScore: number) => {
+    // Load existing performance stats
+    const stats = await AsyncStorage.getItem('performanceStats');
+    const parsedStats = stats ? JSON.parse(stats) : {
+        patternRecall: { currentScore: 0, highScore: 0 },
+        matchingGame: { currentScore: 0, highScore: 0 },
+        numberSequence: { currentScore: 0, highScore: 0 },
+        iqChallenge: { currentScore: 0, highScore: 0 },
+    };
+
+    // Update the current score and high score for Matching Game
+    parsedStats.matchingGame.currentScore = newScore;
+    if (newScore > parsedStats.matchingGame.highScore) {
+        parsedStats.matchingGame.highScore = newScore;
+    }
+
+    // Save updated performance stats
+    await AsyncStorage.setItem('performanceStats', JSON.stringify(parsedStats));
+  };
+
   const geekWinGameFunction = () => {
     Animated.timing(winMessage, {
       toValue: 1,
@@ -201,6 +221,7 @@ export default function MatchingGame() {
       easing: Easing.linear,
       useNativeDriver: false,
     }).start();
+    handleGameCompletion(score); // Save score when the game is won
   };
 
   useEffect(() => {

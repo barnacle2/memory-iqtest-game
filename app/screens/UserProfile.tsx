@@ -10,7 +10,6 @@ interface PerformanceStats {
   matchingGame: { currentScore: number; highScore: number };
   numberSequence: { currentScore: number; highScore: number };
   iqChallenge: { currentScore: number; highScore: number };
-  // Add more games as needed
 }
 
 interface User {
@@ -36,16 +35,21 @@ const UserProfile = () => {
       try {
         const name = await AsyncStorage.getItem('playerName');
         const stats = await AsyncStorage.getItem('performanceStats');
+        let parsedStats = stats ? JSON.parse(stats) : {};
+
+        // Ensure all stats exist, even if missing in storage
+        const defaultStats: PerformanceStats = {
+          patternRecall: parsedStats.patternRecall || { currentScore: 0, highScore: 0 },
+          matchingGame: parsedStats.matchingGame || { currentScore: 0, highScore: 0 },
+          numberSequence: parsedStats.numberSequence || { currentScore: 0, highScore: 0 },
+          iqChallenge: parsedStats.iqChallenge || { currentScore: 0, highScore: 0 },
+        };
+
         if (name) {
           setUser({
             name,
-            avatar: 'https://www.shareicon.net/data/512x512/2016/08/18/809170_user_512x512.png', // Placeholder avatar URL
-            performanceStats: stats ? JSON.parse(stats) : {
-              patternRecall: { currentScore: 0, highScore: 0 },
-              matchingGame: { currentScore: 0, highScore: 0 },
-              numberSequence: { currentScore: 0, highScore: 0 },
-              iqChallenge: { currentScore: 0, highScore: 0 },
-            },
+            avatar: 'https://www.shareicon.net/data/512x512/2016/08/18/809170_user_512x512.png',
+            performanceStats: defaultStats,
           });
         }
       } catch (error) {
@@ -57,7 +61,7 @@ const UserProfile = () => {
   }, []);
 
   const handleBackPress = () => {
-    router.back(); // Navigate back to the previous screen
+    router.back();
   };
 
   return (
@@ -83,7 +87,7 @@ const UserProfile = () => {
         ))}
       </View>
 
-      <Button title="Game Settings" onPress={() => { /* Navigate to settings screen */ }} />
+      <Button title="Game Settings" onPress={() => {}} />
     </View>
   );
 };
@@ -111,7 +115,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 100,
     height: 100,
-    borderRadius: 50, // Circular avatar
+    borderRadius: 50,
     marginBottom: SPACING.md,
   },
   header: {
@@ -137,4 +141,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserProfile; 
+export default UserProfile;
