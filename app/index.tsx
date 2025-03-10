@@ -66,6 +66,14 @@ export default function Landing() {
     try {
       // Save player name to AsyncStorage
       await AsyncStorage.setItem('playerName', playerName.trim());
+
+      // Initialize user data
+      const initialStats = {
+        patternRecall: { currentScore: 0, highScore: 0 },
+        matchingGame: { currentScore: 0, highScore: 0 },
+      };
+      await AsyncStorage.setItem('performanceStats', JSON.stringify(initialStats));
+
       // Navigate to game menu
       router.push('/menu');
     } catch (err) {

@@ -15,11 +15,12 @@ import { COLORS, SPACING, FONT_SIZES, SHADOWS } from '../../constants/theme';
 import { Card } from '../../components/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 interface MatchingCard {
   id: number;
   value: string;
+  symbol: string;
   isFlipped: boolean;
   isMatched: boolean;
 }
@@ -31,7 +32,7 @@ const ICONS = [
   'airplane', 'boat', 'car', 'bicycle'
 ];
 
-const randomArrFunction = (arr) => {
+const randomArrFunction = (arr: any[]) => {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -47,16 +48,18 @@ const gameCardsFunction = () => {
   const randomIcons = randomArrFunction(icons);
   return randomIcons.map((icon, index) => ({
     id: index,
+    value: icon,
     symbol: icon,
     isFlipped: false,
+    isMatched: false,
   }));
 };
 
 export default function MatchingGame() {
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
-  const [cards, setCards] = useState(gameCardsFunction());
-  const [selectedCards, setSelectedCards] = useState([]);
+  const [cards, setCards] = useState<MatchingCard[]>(gameCardsFunction());
+  const [selectedCards, setSelectedCards] = useState<MatchingCard[]>([]);
   const [matches, setMatches] = useState(0);
   const [winMessage, setWinMessage] = useState(new Animated.Value(0));
   const [gameWon, setGameWon] = useState(false);
@@ -160,7 +163,7 @@ export default function MatchingGame() {
     }
   };
 
-  const cardClickFunction = (card) => {
+  const cardClickFunction = (card: MatchingCard) => {
     if (!gameWon && selectedCards.length < 2 && !card.isFlipped && timeLeft > 0) {
       const updatedSelectedCards = [...selectedCards, card];
       const updatedCards = cards.map((c) =>

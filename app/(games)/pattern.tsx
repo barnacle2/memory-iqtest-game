@@ -104,72 +104,58 @@ export default function PatternGame() {
   }, [isReady, gameState]);
 
   const generatePattern = () => {
-    const patternLength = Math.min(3 + Math.floor(level / 2), 8);
-    const newPattern: number[] = [];
+    let patternLength = level <= 3 ? 4 : Math.min(level + 1, gridSize * gridSize);
     const totalCells = gridSize * gridSize;
 
-    // Generate unique random numbers for the pattern
-    while (newPattern.length < patternLength) {
-        const cell = Math.floor(Math.random() * totalCells);
-        if (!newPattern.includes(cell)) {
-            newPattern.push(cell);
+    const newPattern = new Set<number>();
+
+    while (newPattern.size < patternLength) {
+        let randIndex = Math.floor(Math.random() * totalCells);
+
+        // Ensure we don’t generate an invalid index
+        if (randIndex < 0 || randIndex >= totalCells) {
+            console.error(`Invalid index generated: ${randIndex}`);
+            continue;
         }
+
+        newPattern.add(randIndex);
     }
 
-    // Ensure the pattern includes all numbers from 0 to patternLength - 1
-    for (let i = 0; i < patternLength; i++) {
-        if (!newPattern.includes(i)) {
-            newPattern[i] = i; // Fill in missing numbers
-        }
-    }
+    const uniquePattern = Array.from(newPattern);
 
-    // Remove duplicates and sort the pattern
-    const uniquePattern = Array.from(new Set(newPattern)).sort((a, b) => a - b);
-    
+    console.log(`Level: ${level}, Generated Pattern:`, uniquePattern); // Debugging log
+
     setPattern(uniquePattern);
     showPatternToPlayer(uniquePattern);
-  };
+};
 
-  const showPatternToPlayer = (newPattern: number[]) => {
+const showPatternToPlayer = (newPattern: number[]) => {
     setShowPattern(true);
-    
-    // Highlight pattern cells
-    const newCells = cells.map(cell => ({
-      ...cell,
-      isActive: newPattern.includes(cell.id),
-      isSelected: false // Reset any selected state
-    }));
-    setCells(newCells);
 
-    // Display number indicators for the pattern
-    newPattern.forEach((cellId, index) => {
-      const cellIndex = newCells.findIndex(cell => cell.id === cellId);
-      if (cellIndex !== -1) {
-        newCells[cellIndex] = {
-          ...newCells[cellIndex],
-          indicator: index + 1 // Add an indicator for the order
-        };
-      }
+    setCells(prevCells => {
+        const updatedCells = prevCells.map(cell => ({
+            ...cell,
+            isActive: newPattern.includes(cell.id),
+            isSelected: false, 
+            indicator: newPattern.includes(cell.id) ? newPattern.indexOf(cell.id) + 1 : undefined
+        }));
+        return updatedCells;
     });
-    setCells(newCells);
 
     // Hide pattern after delay
     const showDuration = Math.max(3000 - (level * 200), 1000);
     setTimeout(() => {
-      if (cells) {
-        const resetCells = cells.map(cell => ({ 
-          ...cell, 
-          isActive: false,
-          isSelected: false,
-          indicator: undefined // Reset indicator
-        }));
-        setCells(resetCells);
+        setCells(prevCells => prevCells.map(cell => ({
+            ...cell,
+            isActive: false,
+            isSelected: false,
+            indicator: undefined
+        })));
         setShowPattern(false);
         setGameState('input');
         setPlayerPattern([]);
-      }
     }, showDuration);
-  };
+};
 
   const handleCellPress = (cellId: number) => {
     if (gameState !== 'input') return;
@@ -180,35 +166,48 @@ export default function PatternGame() {
 
     // Update cell visual state
     const newCells = cells.map(cell => ({
-      ...cell,
-      isSelected: cell.id === cellId || (cell.isSelected && cell.id !== cellId)
+        ...cell,
+        isSelected: cell.id === cellId || (cell.isSelected && cell.id !== cellId)
     }));
     setCells(newCells);
 
     // Check if wrong cell was pressed
     if (pattern[playerPattern.length] !== cellId) {
-      handleGameOver();
-      return;
+        handleGameOver(); // Call game over if the wrong cell is pressed
+        return;
     }
 
     // Check if pattern is complete
     if (newPlayerPattern.length === pattern.length) {
-      const newScore = score + (level * 10);
-      setScore(newScore);
-      setLevel(prev => prev + 1);
-      if ((level + 1) % 3 === 0 && gridSize < 5) {
-        setGridSize(prev => prev + 1);
-      }
-      // Reset for next level
-      setGameState('showing');
-      const resetCells = cells.map(cell => ({
-        ...cell,
-        isActive: false,
-        isSelected: false
-      }));
-      setCells(resetCells);
-      setPlayerPattern([]);
-      generatePattern();
+        // Check if the player's pattern matches the generated pattern
+        const isPatternCorrect = newPlayerPattern.every((id, index) => id === pattern[index]);
+        
+        console.log("Player Pattern:", newPlayerPattern);
+        console.log("Expected Pattern:", pattern);
+
+        if (isPatternCorrect) {
+            const newScore = score + (level * 10);
+            setScore(newScore);
+            setLevel(prev => prev + 1);
+            
+            // Check if grid size should increase
+            if ((level + 1) % 3 === 0 && gridSize < 5) {
+                setGridSize(prev => prev + 1);
+            }
+
+            // Reset for next level
+            setGameState('showing'); // Change game state to 'showing' to display the new pattern
+            const resetCells = cells.map(cell => ({
+                ...cell,
+                isActive: false,
+                isSelected: false
+            }));
+            setCells(resetCells);
+            setPlayerPattern([]);
+            generatePattern(); // Generate a new pattern for the next level
+        } else {
+            handleGameOver(); // Call game over if the pattern is incorrect
+        }
     }
   };
 
